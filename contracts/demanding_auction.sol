@@ -33,6 +33,8 @@ contract DemandingAuctionManager is SplitUser {
                                      base:        true
                                    });
 
+        _updateBid(base_id, A.beneficiary, A.sell_amount);
+
         return (_last_auction_id, base_id);
     }
 }

@@ -14,6 +14,12 @@ contract TestableManager is DemandingAuctionManager {
     function isReversed(uint id) returns (bool) {
         return _auctions[id].reversed;
     }
+    function getSellAmount(uint id) returns (uint) {
+        return _auctionlets[id].sell_amount;
+    }
+    function getAuctionSellAmount(uint id) returns (uint) {
+        return _auctions[id].sell_amount;
+    }
 }
 
 contract AuctionTester is Tester {
@@ -103,6 +109,10 @@ contract DemandingReverseAuctionTest is Test {
     }
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
+        var (id, base) = newDemandingAuction();
+        var very_large = 2 ** 256 - 1;
+        assertEq(manager.getAuctionSellAmount(id), very_large);
+        assertEq(manager.getSellAmount(base), very_large);
     }
     function testSupplyManager() {
         // check that the supply manager works as we expect it to
