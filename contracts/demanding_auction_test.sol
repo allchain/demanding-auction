@@ -1,5 +1,10 @@
 import 'dapple/test.sol';
+
 import 'erc20/base.sol';
+import 'dappsys/token/supply_manager.sol';
+import 'dappsys/data/balance_db.sol';
+import 'dappsys/auth/basic_authority.sol';
+
 import 'demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
@@ -19,6 +24,9 @@ contract TestableManager is DemandingAuctionManager {
     }
     function getAuctionSellAmount(uint id) returns (uint) {
         return _auctions[id].sell_amount;
+    }
+    function getSupplier(uint id) returns (DSTokenSupplyManager) {
+        return _auctions[id].supplier;
     }
 }
 
@@ -43,7 +51,7 @@ contract AuctionTester is Tester {
     }
 }
 
-contract DemandingReverseAuctionTest is Test {
+contract DemandingReverseAuctionTest is Test, DSAuthUser {
     TestableManager manager;
     AuctionTester seller;
     Tester beneficiary;
@@ -53,10 +61,17 @@ contract DemandingReverseAuctionTest is Test {
     ERC20 t1;
     ERC20 t2;
 
+    DSBalanceDB db;
+    DSBasicAuthority authority;
+    DSTokenSupplyManager supplier;
+
     // use prime numbers to avoid coincidental collisions
     uint constant T1 = 5 ** 12;
     uint constant T2 = 7 ** 10;
 
+    function DemandingReverseAuctionTest() {
+        authority = new DSBasicAuthority();
+    }
     function setUp() {
         manager = new TestableManager();
         manager.setTime(block.timestamp);
@@ -90,6 +105,22 @@ contract DemandingReverseAuctionTest is Test {
         t2.transfer(this, 1000 * T2);
         t1.approve(manager, 1000 * T1);
         t2.approve(manager, 1000 * T2);
+
+        setUpSupplier();
+    }
+    function setUpSupplier() {
+        db = new DSBalanceDB();
+        supplier = new DSTokenSupplyManager(db);
+
+        db.updateAuthority(authority, DSAuthModes.Authority);
+        authority.setCanCall(supplier, db,
+                             bytes4(sha3('addBalance(address,uint256)')),
+                             true);
+
+        supplier.updateAuthority(authority, DSAuthModes.Authority);
+        authority.setCanCall(this, supplier,
+                             bytes4(sha3('demand(uint256)')),
+                             true);
     }
     function newDemandingAuction() returns (uint id, uint base) {
         return manager.newDemandingReverseAuction({beneficiary:  beneficiary,
@@ -129,6 +160,15 @@ contract DemandingReverseAuctionTest is Test {
         assertEq(balance_after1 - balance_before1, 0);
         assertEq(balance_before2 - balance_after2, 0);
         assertEq(balance_after2 - balance_before2, 0);
+    }
+    function testSupplyManagerSetup() {
+        // check that the supply manager works as we expect it to
+        var balance_before = db.getBalance(this);
+        supplier.demand(10);
+        var balance_after = db.getBalance(this);
+
+        assertEq(balance_after - balance_before, 10);
+        assertEq(db.getSupply(), 10);
     }
     function testSupplyManager() {
         // check that the supply manager works as we expect it to
