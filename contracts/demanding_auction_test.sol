@@ -82,8 +82,20 @@ contract DemandingReverseAuctionTest is Test {
         t1.approve(manager, 1000 * T1);
         t2.approve(manager, 1000 * T2);
     }
+    function newDemandingAuction() returns (uint id, uint base) {
+        return manager.newDemandingReverseAuction({beneficiary:  beneficiary,
+                                                   selling:      t1,
+                                                   buying:       t2,
+                                                   buy_amount:   100 * T2,
+                                                   min_decrease: 2 * T1,
+                                                   duration:     1 years
+                                                  });
+    }
     function testNewDemandingAuction() {
         // create a new demanding auction
+        var (id, base) = newDemandingAuction();
+        assertEq(id, 1);
+        assertEq(base, 1);
     }
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
