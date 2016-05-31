@@ -1,5 +1,5 @@
 import 'dapple/test.sol';
-import 'dappsys/token/base.sol';
+import 'erc20/base.sol';
 import 'demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
@@ -54,8 +54,8 @@ contract DemandingReverseAuctionTest is Test {
 
         var million = 10 ** 6;
 
-        t1 = new DSTokenBase(million * T1);
-        t2 = new DSTokenBase(million * T2);
+        t1 = new ERC20Base(million * T1);
+        t2 = new ERC20Base(million * T2);
 
         seller = new AuctionTester();
         seller.bindManager(manager);
