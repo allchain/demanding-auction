@@ -25,3 +25,18 @@ by inflating the total MKR supply.
 
 [token-auction]: https://github.com/rainbeam/token-auction
 [debt-auction]: https://makerdao.github.io/docs/
+
+
+## Implementation
+
+- A new reverse demandable auction is created
+
+- The `sell_amount` is set to a very large number (e.g. `2 ** 256 - 1`)
+
+- An address of a `DSTokenSupplyManager` instance is provided (e.g.
+  the MKR supply manager).
+
+- There is no transfer of funds from the seller.
+
+- When a bidder calls `claim`, the `demand` method of the supply
+  manager is called to provide the bidder's winnings.
