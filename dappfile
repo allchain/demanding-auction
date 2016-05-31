@@ -1,0 +1,8 @@
+name: demanding-auction
+version: 0.1.0
+layout:
+  sol_sources: contracts
+  build_dir: build
+dependencies:
+  dappsys: 0.3.1
+  token-auction: 0.1.0
