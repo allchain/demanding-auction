@@ -114,12 +114,24 @@ contract DemandingReverseAuctionTest is Test {
         assertEq(manager.getAuctionSellAmount(id), very_large);
         assertEq(manager.getSellAmount(base), very_large);
     }
-    function testSupplyManager() {
-        // check that the supply manager works as we expect it to
-    }
     function testNoTransferFromSeller() {
         // creating a new demanding auction should not
-        // transfer any funds from the seller
+        // transfer any funds to / from the seller
+        var balance_before1 = t1.balanceOf(seller);
+        var balance_before2 = t2.balanceOf(seller);
+
+        var (id, base) = newDemandingAuction();
+
+        var balance_after1 = t1.balanceOf(seller);
+        var balance_after2 = t2.balanceOf(seller);
+
+        assertEq(balance_before1 - balance_after1, 0);
+        assertEq(balance_after1 - balance_before1, 0);
+        assertEq(balance_before2 - balance_after2, 0);
+        assertEq(balance_after2 - balance_before2, 0);
+    }
+    function testSupplyManager() {
+        // check that the supply manager works as we expect it to
     }
     function testClaimTransfersToBidder() {
         // the claim function should still transfer to the bidder
