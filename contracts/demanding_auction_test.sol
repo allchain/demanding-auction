@@ -37,6 +37,7 @@ contract AuctionTester is Tester {
 contract DemandingReverseAuctionTest is Test {
     TestableManager manager;
     AuctionTester seller;
+    Tester beneficiary;
     AuctionTester bidder1;
     AuctionTester bidder2;
 
@@ -58,6 +59,8 @@ contract DemandingReverseAuctionTest is Test {
 
         seller = new AuctionTester();
         seller.bindManager(manager);
+
+        beneficiary = new Tester();
 
         t1.transfer(seller, 200 * T1);
         seller.doApprove(manager, 200 * T1, t1);
