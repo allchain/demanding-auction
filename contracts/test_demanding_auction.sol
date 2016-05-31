@@ -1,4 +1,8 @@
-contract DemandingReverseAuctionTest {
+import 'dapple/test.sol';
+
+contract DemandingReverseAuctionTest is Test {
+    function setUp() {
+    }
     function testNewDemandingAuction() {
         // create a new demanding auction
     }
