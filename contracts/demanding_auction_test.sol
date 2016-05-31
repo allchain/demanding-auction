@@ -11,6 +11,9 @@ contract TestableManager is DemandingAuctionManager {
     function setTime(uint timestamp) {
         debug_timestamp = timestamp;
     }
+    function isReversed(uint id) returns (bool) {
+        return _auctions[id].reversed;
+    }
 }
 
 contract AuctionTester is Tester {
@@ -96,6 +99,7 @@ contract DemandingReverseAuctionTest is Test {
         var (id, base) = newDemandingAuction();
         assertEq(id, 1);
         assertEq(base, 1);
+        assertTrue(manager.isReversed(id));
     }
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
