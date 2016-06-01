@@ -177,7 +177,7 @@ contract DemandingReverseAuctionTest is Test, DSAuthUser {
         var _supplier = manager.getSupplier(id);
 
         var balance_before = db.getBalance(this);
-        supplier.demand(10);
+        _supplier.demand(10);
         var balance_after = db.getBalance(this);
 
         assertEq(balance_after - balance_before, 10);
