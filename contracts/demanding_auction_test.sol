@@ -124,6 +124,7 @@ contract DemandingReverseAuctionTest is Test, DSAuthUser {
     }
     function newDemandingAuction() returns (uint id, uint base) {
         return manager.newDemandingReverseAuction({beneficiary:  beneficiary,
+                                                   supplier:     supplier,
                                                    selling:      t1,
                                                    buying:       t2,
                                                    buy_amount:   100 * T2,
@@ -172,6 +173,15 @@ contract DemandingReverseAuctionTest is Test, DSAuthUser {
     }
     function testSupplyManager() {
         // check that the supply manager works as we expect it to
+        var (id, base) = newDemandingAuction();
+        var _supplier = manager.getSupplier(id);
+
+        var balance_before = db.getBalance(this);
+        supplier.demand(10);
+        var balance_after = db.getBalance(this);
+
+        assertEq(balance_after - balance_before, 10);
+        assertEq(db.getSupply(), 10);
     }
     function testClaimTransfersToBidder() {
         // the claim function should still transfer to the bidder
