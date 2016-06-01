@@ -1,26 +1,8 @@
 import 'dappsys/token/supply_manager.sol';
 import 'token-auction/splitting_auction.sol';
 
-contract DemandingAuctionManager is SplitUser {
-    uint constant INFINITY = 2 ** 256 - 1;
-
-    struct Auction {
-        address creator;
-        address beneficiary;
-        DSTokenSupplyManager supplier;
-        ERC20 selling;
-        ERC20 buying;
-        uint start_bid;
-        uint min_increase;
-        uint min_decrease;
-        uint sell_amount;
-        uint collected;
-        uint COLLECT_MAX;
-        uint expiration;
-        bool reversed;
-        uint unsold;
-    }
-    mapping(uint => Auction) _auctions;
+contract DemandingAuctionManager is SplittableAuctionManager {
+    mapping(uint => DSTokenSupplyManager) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
                                        , DSTokenSupplyManager supplier
@@ -30,32 +12,31 @@ contract DemandingAuctionManager is SplitUser {
                                        , uint min_decrease
                                        , uint duration
                                        )
-        returns (uint, uint)
+        returns (uint auction_id, uint base_id)
     {
-        Auction memory A;
-        A.creator = msg.sender;
-        A.supplier = supplier;
-        A.beneficiary = beneficiary;
-        A.selling = selling;
-        A.buying = buying;
-        A.sell_amount = INFINITY;
-        A.start_bid = buy_amount;
-        A.min_decrease = min_decrease;
-        A.expiration = getTime() + duration;
+        (auction_id, base_id) = _newTwoWayAuction({ creator: msg.sender
+                                                  , beneficiary: beneficiary
+                                                  , selling: selling
+                                                  , buying: buying
+                                                  , sell_amount: INFINITY
+                                                  , start_bid: buy_amount
+                                                  , min_increase: 0
+                                                  , min_decrease: min_decrease
+                                                  , duration: duration
+                                                  , COLLECT_MAX: 0
+                                                  });
+
+        Auction A = _auctions[auction_id];
         A.reversed = true;
 
-        _auctions[++_last_auction_id] = A;
+        _suppliers[auction_id] = supplier;
 
-        // create the base auctionlet
-        var base_id = newAuctionlet({auction_id: _last_auction_id,
-                                     bid:         A.start_bid,
-                                     quantity:    A.sell_amount,
-                                     last_bidder: A.beneficiary,
-                                     base:        true
-                                   });
-
-        _updateBid(base_id, A.beneficiary, A.sell_amount);
-
-        return (_last_auction_id, base_id);
+        return (auction_id, base_id);
+    }
+    // override these transfer functions as we no longer keep sell
+    // tokens in escrow
+    function takeFundsIntoEscrow(Auction A) internal {
+    }
+    function settleExcessSell(Auction A, uint excess_sell) internal {
     }
 }

@@ -26,7 +26,11 @@ contract TestableManager is DemandingAuctionManager {
         return _auctions[id].sell_amount;
     }
     function getSupplier(uint id) returns (DSTokenSupplyManager) {
-        return _auctions[id].supplier;
+        return _suppliers[id];
+    }
+    function forceExpire() {
+        // force expiry
+        setTime(getTime() + 1000 years);
     }
 }
 
@@ -182,6 +186,16 @@ contract DemandingReverseAuctionTest is Test, DSAuthUser {
 
         assertEq(balance_after - balance_before, 10);
         assertEq(db.getSupply(), 10);
+    }
+    function testBid() {
+        // check that bid still works as expected
+        var (id, base) = newDemandingAuction();
+
+        var balance_before = t2.balanceOf(bidder1);
+        bidder1.doBid(base, 50 * T1);
+        var balance_after = t2.balanceOf(bidder1);
+
+        assertEq(balance_before - balance_after, 100 * T2);
     }
     function testClaimTransfersToBidder() {
         // the claim function should still transfer to the bidder
