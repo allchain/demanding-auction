@@ -134,9 +134,12 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         db = t1.getController().getBalanceDB();
         supplier = new DSTokenSupplyManager(db);
 
+        // db.updateAuthority(authority, DSAuthModes.Authority);
+        // ^ Fails
         authority.setCanCall(supplier, db,
                              bytes4(sha3('addBalance(address,uint256)')),
                              true);
+        supplier.updateAuthority(authority, DSAuthModes.Authority);
         authority.setCanCall(this, supplier,
                              bytes4(sha3('demand(uint256)')),
                              true);
@@ -215,11 +218,50 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
 
         assertEq(balance_before - balance_after, 100 * T2);
     }
+    function set_manager_auth() {
+        authority.setCanCall(address(manager), address(supplier),
+                             bytes4(sha3('demand(uint256)')),
+                             true);
+    }
+    function testManagerAuth() {
+        var can_before = authority.canCall(address(manager), address(supplier),
+                                           bytes4(sha3('demand(uint256)')));
+        set_manager_auth();
+        var can_after = authority.canCall(address(manager), address(supplier),
+                                          bytes4(sha3('demand(uint256)')));
+
+        assertFalse(can_before);
+        assertTrue(can_after);
+    }
     function testClaimTransfersToBidder() {
         // the claim function should still transfer to the bidder
+        var (id, base) = newDemandingAuction();
+
+        bidder1.doBid(base, 50 * T1);
+
+        manager.forceExpire();
+
+        var balance_before = t1.balanceOf(bidder1);
+        set_manager_auth();
+        bidder1.doClaim(base);
+        var balance_after = t1.balanceOf(bidder1);
+
+        assertEq(balance_after - balance_before, 50 * T1);
     }
     function testClaimInflatesSupply() {
         // bidder calling claim should inflate the supply of the
         // sell token by their winning bid
+        var (id, base) = newDemandingAuction();
+
+        bidder1.doBid(base, 50 * T1);
+
+        manager.forceExpire();
+
+        var balance_before = t1.totalSupply();
+        set_manager_auth();
+        bidder1.doClaim(base);
+        var balance_after = t1.totalSupply();
+
+        assertEq(balance_after - balance_before, 50 * T1);
     }
 }

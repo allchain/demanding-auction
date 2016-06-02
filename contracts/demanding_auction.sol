@@ -33,10 +33,16 @@ contract DemandingAuctionManager is SplittingAuctionManager {
 
         return (auction_id, base_id);
     }
-    // override these transfer functions as we no longer keep sell
-    // tokens in escrow
+    // override these transfer functions as we no longer keep sell tokens in escrow
     function takeFundsIntoEscrow(Auction A) internal {
     }
     function settleExcessSell(Auction A, uint excess_sell) internal {
+    }
+    function settleBidderClaim(Auction A, Auctionlet a) internal {
+        // demand the claimable amount from the supplier and then
+        // send it to the winning bidder
+        var supplier = _suppliers[a.auction_id];
+        supplier.demand(a.sell_amount);
+        assert(A.selling.transfer(a.last_bidder, a.sell_amount));
     }
 }
