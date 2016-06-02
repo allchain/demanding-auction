@@ -23,7 +23,7 @@ contract DemandingAuctionManager is SplittingAuctionManager {
                                                   , min_increase: 0
                                                   , min_decrease: min_decrease
                                                   , duration: duration
-                                                  , COLLECT_MAX: 0
+                                                  , collection_limit: 0
                                                   });
 
         Auction A = _auctions[auction_id];
