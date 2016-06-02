@@ -268,6 +268,17 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
 
         assertEq(balance_after - balance_before, 50 * T1);
     }
+    function testFailClaimAgain() {
+        var (id, base) = newDemandingAuction();
+
+        bidder1.doBid(base, 50 * T1);
+
+        manager.forceExpire();
+
+        set_manager_auth();
+        bidder1.doClaim(base);
+        bidder1.doClaim(base);
+    }
     function testNoReclaim() {
         var (id, base) = newDemandingAuction();
 

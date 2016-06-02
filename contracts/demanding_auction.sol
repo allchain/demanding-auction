@@ -41,8 +41,15 @@ contract DemandingAuctionManager is SplittingAuctionManager {
     function settleBidderClaim(Auction A, Auctionlet a) internal {
         // demand the claimable amount from the supplier and then
         // send it to the winning bidder
+
+        // supplier lookup will fail for deleted auctionlet as the
+        // auction_id gets set to zero, and ids start from one
         var supplier = _suppliers[a.auction_id];
+
+        // inflate the sell token, sending to this contract
         supplier.demand(a.sell_amount);
+
+        // send the newly minted sell token on to the last bidder
         assert(A.selling.transfer(a.last_bidder, a.sell_amount));
     }
     function settleReclaim(Auction A) internal {
