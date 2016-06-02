@@ -26,6 +26,20 @@ by inflating the total MKR supply.
 [token-auction]: https://github.com/rainbeam/token-auction
 [debt-auction]: https://makerdao.github.io/docs/
 
+## Usage
+
+A `DemandingAuctionManager` instance can track multiple independent
+auctions. Create a new auction with `newDemandingReverseAuction`.
+Required arguments:
+
+- `address beneficiary`: where the bidders' offers will be sent
+- `ERC20 selling`: the standard token the auction is selling
+- `ERC20 buying`: the standard token the auction is buying
+- `uint buy_amount`: how much of the buying token is required for
+  the full sell amount
+- `uint min_decrease`: the minimum decrease in subsequent offers
+- `uint duration`: the duration of the auction in seconds. Bidders
+  cannot claim before this has elapsed.
 
 ## Implementation
 
