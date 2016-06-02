@@ -55,6 +55,10 @@ contract AuctionTester is Tester {
     }
 }
 
+// This test uses the full dappsys auth / factory system. This isn't
+// strictly necessary as the only necessary component is a supply
+// manager, which could be mocked. However, at the time of writing the
+// intended usage is in a dappsys system.
 contract DemandingReverseAuctionTest is Test, TestFactoryUser {
     TestableManager manager;
     AuctionTester seller;
