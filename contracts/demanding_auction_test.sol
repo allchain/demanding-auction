@@ -16,9 +16,6 @@ contract TestableManager is DemandingAuctionManager {
     function setTime(uint timestamp) {
         debug_timestamp = timestamp;
     }
-    function isReversed(uint id) returns (bool) {
-        return _auctions[id].reversed;
-    }
     function getSellAmount(uint id) returns (uint) {
         return _auctionlets[id].sell_amount;
     }
@@ -49,9 +46,6 @@ contract AuctionTester is Tester {
     }
     function doClaim(uint id) {
         return manager.claim(id);
-    }
-    function doReclaim(uint id) {
-        return manager.reclaim(id);
     }
 }
 
@@ -159,7 +153,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
                                                    selling:      ERC20(t1),
                                                    buying:       ERC20(t2),
                                                    buy_amount:   100 * T2,
-                                                   min_decrease: 2 * T1,
+                                                   min_decrease: 2,
                                                    duration:     1 years
                                                   });
     }
@@ -278,18 +272,5 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         set_manager_auth();
         bidder1.doClaim(base);
         bidder1.doClaim(base);
-    }
-    function testNoReclaim() {
-        var (id, base) = newDemandingAuction();
-
-        bidder1.doBid(base, 50 * T1);
-
-        manager.forceExpire();
-
-        var balance_before = t1.balanceOf(seller);
-        seller.doReclaim(base);
-        var balance_after = t1.balanceOf(seller);
-
-        assertEq(balance_before, balance_after);
     }
 }

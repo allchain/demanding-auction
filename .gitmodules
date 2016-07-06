@@ -1,6 +1,6 @@
 [submodule "dapple_packages/token-auction"]
 	path = dapple_packages/token-auction
-	url = https://github.com/rainbeam/token-auction
+	url = https://github.com/makerdao/token-auction
 [submodule "dapple_packages/dappsys"]
 	path = dapple_packages/dappsys
 	url = https://github.com/nexusdev/dappsys

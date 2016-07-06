@@ -1,5 +1,5 @@
 import 'dappsys/token/supply_manager.sol';
-import 'token-auction/splitting_auction.sol';
+import 'token-auction/manager.sol';
 
 contract DemandingAuctionManager is SplittingAuctionManager {
     mapping(uint => DSTokenSupplyManager) _suppliers;
@@ -14,20 +14,21 @@ contract DemandingAuctionManager is SplittingAuctionManager {
                                        )
         returns (uint auction_id, uint base_id)
     {
-        (auction_id, base_id) = _newTwoWayAuction({ creator: msg.sender
-                                                  , beneficiary: beneficiary
-                                                  , selling: selling
-                                                  , buying: buying
-                                                  , sell_amount: INFINITY
-                                                  , start_bid: buy_amount
-                                                  , min_increase: 0
-                                                  , min_decrease: min_decrease
-                                                  , duration: duration
-                                                  , collection_limit: 0
-                                                  });
+        var (beneficiaries, payouts) = _makeSinglePayout(beneficiary, 0);
 
-        Auction A = _auctions[auction_id];
-        A.reversed = true;
+        (auction_id, base_id) = _makeGenericAuction({ creator: msg.sender
+                                                    , beneficiaries: beneficiaries
+                                                    , payouts: payouts
+                                                    , selling: selling
+                                                    , buying: buying
+                                                    , sell_amount: INFINITY
+                                                    , start_bid: buy_amount
+                                                    , min_increase: 0
+                                                    , min_decrease: min_decrease
+                                                    , duration: duration
+                                                    , collection_limit: 0
+                                                    , reversed: true
+                                                    });
 
         _suppliers[auction_id] = supplier;
 
