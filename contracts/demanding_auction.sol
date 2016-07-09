@@ -6,8 +6,8 @@ contract DemandingAuctionManager is SplittingAuctionManager {
 
     function newDemandingReverseAuction( address beneficiary
                                        , DSTokenSupplyManager supplier
-                                       , ERC20 selling
-                                       , ERC20 buying
+                                       , address selling
+                                       , address buying
                                        , uint buy_amount
                                        , uint min_decrease
                                        , uint duration
@@ -19,8 +19,8 @@ contract DemandingAuctionManager is SplittingAuctionManager {
         (auction_id, base_id) = _makeGenericAuction({ creator: msg.sender
                                                     , beneficiaries: beneficiaries
                                                     , payouts: payouts
-                                                    , selling: selling
-                                                    , buying: buying
+                                                    , selling: ERC20(selling)
+                                                    , buying: ERC20(buying)
                                                     , sell_amount: INFINITY
                                                     , start_bid: buy_amount
                                                     , min_increase: 0
