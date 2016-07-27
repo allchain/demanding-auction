@@ -4,14 +4,13 @@ import 'token-auction/manager.sol';
 contract DemandingAuctionManager is AuctionController
                                   , SplittingAuctionFrontend
 {
-    uint constant INFINITY = uint(-1);
-
     mapping(uint => DSTokenSupplyManager) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
                                        , DSTokenSupplyManager supplier
                                        , address selling
                                        , address buying
+                                       , uint max_inflation
                                        , uint buy_amount
                                        , uint min_decrease
                                        , uint duration
@@ -25,7 +24,7 @@ contract DemandingAuctionManager is AuctionController
                                                     , payouts: payouts
                                                     , selling: ERC20(selling)
                                                     , buying: ERC20(buying)
-                                                    , sell_amount: INFINITY
+                                                    , sell_amount: max_inflation
                                                     , start_bid: buy_amount
                                                     , min_increase: 0
                                                     , min_decrease: min_decrease

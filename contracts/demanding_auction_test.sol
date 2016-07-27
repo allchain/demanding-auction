@@ -149,13 +149,14 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         assertEq(t2.balanceOf(bidder2), 1000 * T2);
     }
     function newDemandingAuction() returns (uint id, uint base) {
-        return manager.newDemandingReverseAuction({beneficiary:  beneficiary,
-                                                   supplier:     supplier,
-                                                   selling:      ERC20(t1),
-                                                   buying:       ERC20(t2),
-                                                   buy_amount:   100 * T2,
-                                                   min_decrease: 2,
-                                                   duration:     1 years
+        return manager.newDemandingReverseAuction({beneficiary:   beneficiary,
+                                                   supplier:      supplier,
+                                                   selling:       ERC20(t1),
+                                                   buying:        ERC20(t2),
+                                                   max_inflation: uint(-1),
+                                                   buy_amount:    100 * T2,
+                                                   min_decrease:  2,
+                                                   duration:      1 years
                                                   });
     }
     function testNewDemandingAuction() {
