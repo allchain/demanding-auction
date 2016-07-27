@@ -40,9 +40,10 @@ contract AuctionTester is Tester {
     function doApprove(address spender, uint value, ERC20 token) {
         token.approve(spender, value);
     }
-    function doBid(uint auctionlet_id, uint bid_how_much)
+    function doBid(uint auctionlet_id, uint bid_how_much, uint quantity)
+        returns (uint, uint)
     {
-        return manager.bid(auctionlet_id, bid_how_much);
+        return manager.bid(auctionlet_id, bid_how_much, quantity);
     }
     function doClaim(uint id) {
         return manager.claim(id);
@@ -211,7 +212,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         var (id, base) = newDemandingAuction();
 
         var balance_before = t2.balanceOf(bidder1);
-        bidder1.doBid(base, 50 * T1);
+        bidder1.doBid(base, 50 * T1, 100 * T2);
         var balance_after = t2.balanceOf(bidder1);
 
         assertEq(balance_before - balance_after, 100 * T2);
@@ -235,7 +236,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         // the claim function should still transfer to the bidder
         var (id, base) = newDemandingAuction();
 
-        bidder1.doBid(base, 50 * T1);
+        bidder1.doBid(base, 50 * T1, 100 * T2);
 
         manager.forceExpire();
 
@@ -251,7 +252,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         // sell token by their winning bid
         var (id, base) = newDemandingAuction();
 
-        bidder1.doBid(base, 50 * T1);
+        bidder1.doBid(base, 50 * T1, 100 * T2);
 
         manager.forceExpire();
 
@@ -265,7 +266,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
     function testFailClaimAgain() {
         var (id, base) = newDemandingAuction();
 
-        bidder1.doBid(base, 50 * T1);
+        bidder1.doBid(base, 50 * T1, 100 * T2);
 
         manager.forceExpire();
 
