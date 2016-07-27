@@ -1,7 +1,11 @@
 import 'dappsys/token/supply_manager.sol';
 import 'token-auction/manager.sol';
 
-contract DemandingAuctionManager is SplittingAuctionManager {
+contract DemandingAuctionManager is AuctionController
+                                  , SplittingAuctionFrontend
+{
+    uint constant INFINITY = uint(-1);
+
     mapping(uint => DSTokenSupplyManager) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
