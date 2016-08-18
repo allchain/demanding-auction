@@ -17,14 +17,14 @@ trust, in that bidders need to verify the demandable contract, but
 is useful when the sold token supply has to be inflated to meet the
 winning bid.
 
-An example of this usage is in Maker, during the [debt auction][whitepaper].
+An example of this usage is in Maker, during the [debt auction].
 In this auction, Maker seeks to acquire a fixed quantity of Dai in
 return for as little MKR as possible. The Dai is used to pay off
 debt incurred in liquidating an underwater CDP; the MKR is provided
 by inflating the total MKR supply.
 
 [token-auction]: https://github.com/rainbeam/token-auction
-[debt-auction]: https://makerdao.github.io/docs/
+[debt-auction]: https://makerdao.github.io/docs/#enforcing-the-target-price-liquidation
 
 ## Usage
 
@@ -35,6 +35,7 @@ Required arguments:
 - `address beneficiary`: where the bidders' offers will be sent
 - `ERC20 selling`: the standard token the auction is selling
 - `ERC20 buying`: the standard token the auction is buying
+- `max_inflation`: the upper limit for sell token inflation (bidding starts here)
 - `uint buy_amount`: how much of the buying token is required for
   the full sell amount
 - `uint min_decrease`: the minimum decrease in subsequent offers
