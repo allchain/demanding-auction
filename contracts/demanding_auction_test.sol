@@ -17,10 +17,10 @@ contract TestableManager is DemandingAuctionManager {
         debug_timestamp = timestamp;
     }
     function getSellAmount(uint id) returns (uint) {
-        return _auctionlets[id].sell_amount;
+        return auctionlets(id).sell_amount;
     }
     function getAuctionSellAmount(uint id) returns (uint) {
-        return _auctions[id].sell_amount;
+        return auctions(id).sell_amount;
     }
     function getSupplier(uint id) returns (DSTokenSupplyManager) {
         return _suppliers[id];
@@ -153,10 +153,10 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
                                                    supplier:      supplier,
                                                    selling:       ERC20(t1),
                                                    buying:        ERC20(t2),
-                                                   max_inflation: uint(-1),
+                                                   max_inflation: uint(uint128(-1)),
                                                    buy_amount:    100 * T2,
                                                    min_decrease:  2,
-                                                   duration:      1 years
+                                                   ttl:           1 years
                                                   });
     }
     function testNewDemandingAuction() {
@@ -169,7 +169,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
         var (id, base) = newDemandingAuction();
-        var very_large = 2 ** 256 - 1;
+        var very_large = 2 ** 128 - 1;
         assertEq(manager.getAuctionSellAmount(id), very_large);
         assertEq(manager.getSellAmount(base), very_large);
     }

@@ -13,7 +13,7 @@ contract DemandingAuctionManager is AuctionController
                                        , uint max_inflation
                                        , uint buy_amount
                                        , uint min_decrease
-                                       , uint duration
+                                       , uint ttl
                                        )
         returns (uint auction_id, uint base_id)
     {
@@ -28,7 +28,7 @@ contract DemandingAuctionManager is AuctionController
                                                     , start_bid: buy_amount
                                                     , min_increase: 0
                                                     , min_decrease: min_decrease
-                                                    , duration: duration
+                                                    , ttl: ttl
                                                     , collection_limit: 0
                                                     , reversed: true
                                                     });
