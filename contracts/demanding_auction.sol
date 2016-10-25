@@ -1,19 +1,25 @@
-import 'dappsys/token/supply_manager.sol';
 import 'token-auction/manager.sol';
+
+// For an example of a supply manager see
+// https://github.com/nexusdev/ds-burner
+contract SupplyManagerInterface {
+    function demand(uint amount);
+    function destroy(uint amount);
+}
 
 contract DemandingAuctionManager is AuctionController
                                   , SplittingAuctionFrontend
 {
-    mapping(uint => DSTokenSupplyManager) _suppliers;
+    mapping(uint => SupplyManagerInterface) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
-                                       , DSTokenSupplyManager supplier
+                                       , SupplyManagerInterface supplier
                                        , address selling
                                        , address buying
                                        , uint max_inflation
                                        , uint buy_amount
                                        , uint min_decrease
-                                       , uint duration
+                                       , uint ttl
                                        )
         returns (uint auction_id, uint base_id)
     {
@@ -28,7 +34,7 @@ contract DemandingAuctionManager is AuctionController
                                                     , start_bid: buy_amount
                                                     , min_increase: 0
                                                     , min_decrease: min_decrease
-                                                    , duration: duration
+                                                    , ttl: ttl
                                                     , collection_limit: 0
                                                     , reversed: true
                                                     });

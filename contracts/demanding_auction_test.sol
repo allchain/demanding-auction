@@ -1,10 +1,5 @@
 import 'dapple/test.sol';
-
-import 'dappsys/data/balance_db.sol';
-import 'dappsys/factory/factory_test.sol';
-import 'dappsys/token/supply_manager.sol';
 import 'erc20/base.sol';
-
 import 'demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
@@ -17,12 +12,12 @@ contract TestableManager is DemandingAuctionManager {
         debug_timestamp = timestamp;
     }
     function getSellAmount(uint id) returns (uint) {
-        return _auctionlets[id].sell_amount;
+        return auctionlets(id).sell_amount;
     }
     function getAuctionSellAmount(uint id) returns (uint) {
-        return _auctions[id].sell_amount;
+        return auctions(id).sell_amount;
     }
-    function getSupplier(uint id) returns (DSTokenSupplyManager) {
+    function getSupplier(uint id) returns (SupplyManagerInterface) {
         return _suppliers[id];
     }
     function forceExpire() {
@@ -37,8 +32,8 @@ contract AuctionTester is Tester {
         _target(_manager);
         manager = TestableManager(_t);
     }
-    function doApprove(address spender, uint value, ERC20 token) {
-        token.approve(spender, value);
+    function doApprove(address spender, uint value, address token) {
+        ERC20(token).approve(spender, value);
     }
     function doBid(uint auctionlet_id, uint bid_how_much, uint quantity)
         returns (uint, uint)
@@ -50,23 +45,31 @@ contract AuctionTester is Tester {
     }
 }
 
-// This test uses the full dappsys auth / factory system. This isn't
-// strictly necessary as the only necessary component is a supply
-// manager, which could be mocked. However, at the time of writing the
-// intended usage is in a dappsys system.
-contract DemandingReverseAuctionTest is Test, TestFactoryUser {
+// mock ERC20 token that provides a demand method
+contract DemandableToken is ERC20Base, SupplyManagerInterface {
+    function DemandableToken(uint initial_balance) ERC20Base(initial_balance) {
+    }
+    function demand(uint amount) {
+        _supply += amount;
+        _balances[msg.sender] += amount;
+    }
+    function destroy(uint amount) {
+    }
+}
+
+contract DemandingReverseAuctionTest is Test {
     TestableManager manager;
     AuctionTester seller;
     Tester beneficiary;
     AuctionTester bidder1;
     AuctionTester bidder2;
 
-    DSTokenFrontend t1;
-    DSTokenFrontend t2;
+    DemandableToken dtoken;
 
-    DSBalanceDB db;
-    DSBasicAuthority authority;
-    DSTokenSupplyManager supplier;
+    ERC20Base t1;
+    ERC20Base t2;
+
+    SupplyManagerInterface supplier;
 
     // use prime numbers to avoid coincidental collisions
     uint constant T1 = 5 ** 12;
@@ -74,74 +77,34 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
 
     uint constant million = 10 ** 6;
 
-    function DemandingReverseAuctionTest() {
-        authority = new DSBasicAuthority();
-        setUpTokens();
-        setUpSupplier();
-    }
     function setUp() {
+        t1 = new DemandableToken(million * T1);
+        t2 = new ERC20Base(million * T2);
+
+        supplier = SupplyManagerInterface(t1);
+
         manager = new TestableManager();
         manager.setTime(block.timestamp);
 
-        setUpTesters();
-    }
-    function setUpTokens() {
-        DSBalanceDB baldb;
-        bytes4 sig = bytes4(sha3("setBalance(address,uint256)"));
-
-        setOwner( authority, factory );
-        t1 = factory.installDSTokenBasicSystem(authority);
-        baldb = t1.getController().getBalanceDB();
-
-        authority.setCanCall(address(this), baldb, sig, true);
-        baldb.setBalance(address(this), million * T1);
-        authority.setCanCall(address(this), baldb, sig, false);
-
-        setOwner( authority, factory );
-        t2 = factory.installDSTokenBasicSystem(authority);
-        baldb = t2.getController().getBalanceDB();
-
-        authority.setCanCall(address(this), baldb, sig, true);
-        baldb.setBalance(address(this), million * T2);
-        authority.setCanCall(address(this), baldb, sig, false);
-    }
-    function setUpTesters() {
         seller = new AuctionTester();
-        seller.bindManager(manager);
-
+        bidder1 = new AuctionTester();
+        bidder2 = new AuctionTester();
         beneficiary = new Tester();
 
-        t1.transfer(seller, 200 * T1);
-        seller.doApprove(manager, 200 * T1, ERC20(t1));
-
-        bidder1 = new AuctionTester();
+        seller.bindManager(manager);
         bidder1.bindManager(manager);
-
-        t2.transfer(bidder1, 1000 * T2);
-        bidder1.doApprove(manager, 1000 * T2, ERC20(t2));
-
-        bidder2 = new AuctionTester();
         bidder2.bindManager(manager);
 
+        t1.transfer(seller, 200 * T1);
+        t2.transfer(bidder1, 1000 * T2);
         t2.transfer(bidder2, 1000 * T2);
-        bidder2.doApprove(manager, 1000 * T2, ERC20(t2));
 
         t1.approve(manager, 1000 * T1);
         t2.approve(manager, 1000 * T2);
-    }
-    function setUpSupplier() {
-        db = t1.getController().getBalanceDB();
-        supplier = new DSTokenSupplyManager(db);
 
-        // db.updateAuthority(authority, DSAuthModes.Authority);
-        // ^ Fails
-        authority.setCanCall(supplier, db,
-                             bytes4(sha3('addBalance(address,uint256)')),
-                             true);
-        supplier.updateAuthority(authority, DSAuthModes.Authority);
-        authority.setCanCall(this, supplier,
-                             bytes4(sha3('demand(uint256)')),
-                             true);
+        seller.doApprove(manager, 200 * T1, t1);
+        bidder1.doApprove(manager, 1000 * T2, t2);
+        bidder2.doApprove(manager, 1000 * T2, t2);
     }
     function testSetUp() {
         assertEq(t1.balanceOf(seller), 200 * T1);
@@ -153,10 +116,10 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
                                                    supplier:      supplier,
                                                    selling:       ERC20(t1),
                                                    buying:        ERC20(t2),
-                                                   max_inflation: uint(-1),
+                                                   max_inflation: uint(uint128(-1)),
                                                    buy_amount:    100 * T2,
                                                    min_decrease:  2,
-                                                   duration:      1 years
+                                                   ttl:           1 years
                                                   });
     }
     function testNewDemandingAuction() {
@@ -169,7 +132,7 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
         var (id, base) = newDemandingAuction();
-        var very_large = 2 ** 256 - 1;
+        var very_large = 2 ** 128 - 1;
         assertEq(manager.getAuctionSellAmount(id), very_large);
         assertEq(manager.getSellAmount(base), very_large);
     }
@@ -218,21 +181,6 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
 
         assertEq(balance_before - balance_after, 100 * T2);
     }
-    function set_manager_auth() {
-        authority.setCanCall(address(manager), address(supplier),
-                             bytes4(sha3('demand(uint256)')),
-                             true);
-    }
-    function testManagerAuth() {
-        var can_before = authority.canCall(address(manager), address(supplier),
-                                           bytes4(sha3('demand(uint256)')));
-        set_manager_auth();
-        var can_after = authority.canCall(address(manager), address(supplier),
-                                          bytes4(sha3('demand(uint256)')));
-
-        assertFalse(can_before);
-        assertTrue(can_after);
-    }
     function testClaimTransfersToBidder() {
         // the claim function should still transfer to the bidder
         var (id, base) = newDemandingAuction();
@@ -242,7 +190,6 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         manager.forceExpire();
 
         var balance_before = t1.balanceOf(bidder1);
-        set_manager_auth();
         bidder1.doClaim(base);
         var balance_after = t1.balanceOf(bidder1);
 
@@ -258,7 +205,6 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
         manager.forceExpire();
 
         var balance_before = t1.totalSupply();
-        set_manager_auth();
         bidder1.doClaim(base);
         var balance_after = t1.totalSupply();
 
@@ -271,7 +217,6 @@ contract DemandingReverseAuctionTest is Test, TestFactoryUser {
 
         manager.forceExpire();
 
-        set_manager_auth();
         bidder1.doClaim(base);
         bidder1.doClaim(base);
     }
