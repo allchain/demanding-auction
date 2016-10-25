@@ -1,7 +1,7 @@
 name: demanding-auction
 version: 0.1.0
 layout:
-  sol_sources: contracts
+  sol_sources: src
   build_dir: build
   packages_directory: dapple_packages
 dependencies:
