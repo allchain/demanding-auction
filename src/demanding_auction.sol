@@ -1,3 +1,5 @@
+pragma solidity ^0.4.2;
+
 import 'token-auction/manager.sol';
 
 // For an example of a supply manager see
