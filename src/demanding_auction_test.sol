@@ -1,8 +1,8 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.4;
 
 import 'dapple/test.sol';
 import 'erc20/base.sol';
-import 'demanding_auction.sol';
+import './demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
     uint public debug_timestamp;
@@ -19,7 +19,7 @@ contract TestableManager is DemandingAuctionManager {
     function getAuctionSellAmount(uint id) returns (uint) {
         return auctions(id).sell_amount;
     }
-    function getSupplier(uint id) returns (SupplyManagerInterface) {
+    function getSupplier(uint id) returns (SupplyControllerInterface) {
         return _suppliers[id];
     }
     function forceExpire() {
@@ -48,14 +48,16 @@ contract AuctionTester is Tester {
 }
 
 // mock ERC20 token that provides a demand method
-contract DemandableToken is ERC20Base, SupplyManagerInterface {
+contract DemandableToken is ERC20Base, SupplyControllerInterface {
     function DemandableToken(uint initial_balance) ERC20Base(initial_balance) {
     }
-    function demand(uint amount) {
+    function demand(address who, uint amount) {
         _supply += amount;
-        _balances[msg.sender] += amount;
+        _balances[who] += amount;
     }
-    function destroy(uint amount) {
+    function destroy(address who, uint amount) {
+        _supply -= amount;
+        _balances[who] -= amount;
     }
 }
 
@@ -71,7 +73,7 @@ contract DemandingReverseAuctionTest is Test {
     ERC20Base t1;
     ERC20Base t2;
 
-    SupplyManagerInterface supplier;
+    SupplyControllerInterface supplier;
 
     // use prime numbers to avoid coincidental collisions
     uint constant T1 = 5 ** 12;
@@ -83,7 +85,7 @@ contract DemandingReverseAuctionTest is Test {
         t1 = new DemandableToken(million * T1);
         t2 = new ERC20Base(million * T2);
 
-        supplier = SupplyManagerInterface(t1);
+        supplier = SupplyControllerInterface(t1);
 
         manager = new TestableManager();
         manager.setTime(block.timestamp);
@@ -154,21 +156,21 @@ contract DemandingReverseAuctionTest is Test {
         assertEq(balance_before2 - balance_after2, 0);
         assertEq(balance_after2 - balance_before2, 0);
     }
-    function testSupplyManagerSetup() {
+    function testSupplyControllerSetup() {
         // check that the supply manager works as we expect it to
         var balance_before = t1.balanceOf(this);
-        supplier.demand(10);
+        supplier.demand(this, 10);
         var balance_after = t1.balanceOf(this);
 
         assertEq(balance_after - balance_before, 10);
     }
-    function testSupplyManager() {
+    function testSupplyController() {
         // check that the supply manager works as we expect it to
         var (id, base) = newDemandingAuction();
         var _supplier = manager.getSupplier(id);
 
         var balance_before = t1.balanceOf(this);
-        _supplier.demand(10);
+        _supplier.demand(this, 10);
         var balance_after = t1.balanceOf(this);
 
         assertEq(balance_after - balance_before, 10);

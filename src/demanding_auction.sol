@@ -1,21 +1,21 @@
-pragma solidity ^0.4.2;
+pragma solidity ^0.4.4;
 
 import 'token-auction/manager.sol';
 
-// For an example of a supply manager see
-// https://github.com/nexusdev/ds-burner
-contract SupplyManagerInterface {
-    function demand(uint amount);
-    function destroy(uint amount);
+// TODO: Soft dependency on ds-token ?
+// https://github.com/nexusdev/ds-token
+contract SupplyControllerInterface {
+    function demand(address for_whom, uint amount);
+    function destroy(address from_whom, uint amount);
 }
 
 contract DemandingAuctionManager is AuctionController
                                   , SplittingAuctionFrontend
 {
-    mapping(uint => SupplyManagerInterface) _suppliers;
+    mapping(uint => SupplyControllerInterface) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
-                                       , SupplyManagerInterface supplier
+                                       , SupplyControllerInterface supplier
                                        , address selling
                                        , address buying
                                        , uint max_inflation
@@ -59,7 +59,7 @@ contract DemandingAuctionManager is AuctionController
         var supplier = _suppliers[a.auction_id];
 
         // inflate the sell token, sending to this contract
-        supplier.demand(a.sell_amount);
+        supplier.demand(this, a.sell_amount);
 
         // send the newly minted sell token on to the last bidder
         assert(A.selling.transfer(a.last_bidder, a.sell_amount));
