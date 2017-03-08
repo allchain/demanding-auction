@@ -1,7 +1,7 @@
 pragma solidity ^0.4.4;
 
-import 'dapple/test.sol';
-import 'erc20/base.sol';
+import 'ds-test/test.sol';
+import 'ds-token/base.sol';
 import './demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
@@ -28,11 +28,10 @@ contract TestableManager is DemandingAuctionManager {
     }
 }
 
-contract AuctionTester is Tester {
+contract AuctionTester {
     TestableManager manager;
     function bindManager(TestableManager _manager) {
-        _target(_manager);
-        manager = TestableManager(_t);
+        manager = TestableManager(_manager);
     }
     function doApprove(address spender, uint value, address token) {
         ERC20(token).approve(spender, value);
@@ -48,8 +47,8 @@ contract AuctionTester is Tester {
 }
 
 // mock ERC20 token that provides a demand method
-contract DemandableToken is ERC20Base, SupplyControllerInterface {
-    function DemandableToken(uint initial_balance) ERC20Base(initial_balance) {
+contract DemandableToken is DSTokenBase, SupplyControllerInterface {
+    function DemandableToken(uint initial_balance) DSTokenBase(initial_balance) {
     }
     function demand(address who, uint amount) {
         _supply += amount;
@@ -61,17 +60,17 @@ contract DemandableToken is ERC20Base, SupplyControllerInterface {
     }
 }
 
-contract DemandingReverseAuctionTest is Test {
+contract DemandingReverseAuctionTest is DSTest {
     TestableManager manager;
     AuctionTester seller;
-    Tester beneficiary;
+    AuctionTester beneficiary;
     AuctionTester bidder1;
     AuctionTester bidder2;
 
     DemandableToken dtoken;
 
-    ERC20Base t1;
-    ERC20Base t2;
+    DSTokenBase t1;
+    DSTokenBase t2;
 
     SupplyControllerInterface supplier;
 
@@ -83,7 +82,7 @@ contract DemandingReverseAuctionTest is Test {
 
     function setUp() {
         t1 = new DemandableToken(million * T1);
-        t2 = new ERC20Base(million * T2);
+        t2 = new DSTokenBase(million * T2);
 
         supplier = SupplyControllerInterface(t1);
 
@@ -93,7 +92,7 @@ contract DemandingReverseAuctionTest is Test {
         seller = new AuctionTester();
         bidder1 = new AuctionTester();
         bidder2 = new AuctionTester();
-        beneficiary = new Tester();
+        beneficiary = new AuctionTester();
 
         seller.bindManager(manager);
         bidder1.bindManager(manager);
@@ -131,7 +130,7 @@ contract DemandingReverseAuctionTest is Test {
         var (id, base) = newDemandingAuction();
         assertEq(id, 1);
         assertEq(base, 1);
-        assertTrue(manager.isReversed(id));
+        assert(manager.isReversed(id));
     }
     function testVeryLargeSellAmount() {
         // check that the sell amount is very large by default
