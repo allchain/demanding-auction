@@ -2,11 +2,8 @@ pragma solidity ^0.4.4;
 
 import 'token-auction/manager.sol';
 
-// TODO: Soft dependency on ds-token ?
-// https://github.com/nexusdev/ds-token
 contract SupplyControllerInterface {
     function demand(address for_whom, uint amount);
-    function destroy(address from_whom, uint amount);
 }
 
 contract DemandingAuctionManager is AuctionController
