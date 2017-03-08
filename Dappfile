@@ -1,0 +1,5 @@
+name           demanding-auction
+description    Token auction that inflates a token on demand
+version        0.1
+
+author         Rain <rainbreak@riseup.net>

@@ -1,6 +1,9 @@
-[submodule "dapple_packages/token-auction"]
-	path = dapple_packages/token-auction
+[submodule "lib/erc20"]
+	path = lib/erc20
+	url = https://github.com/dapphub/erc20
+[submodule "lib/token-auction"]
+	path = lib/token-auction
 	url = https://github.com/makerdao/token-auction
-[submodule "dapple_packages/erc20"]
-	path = dapple_packages/erc20
-	url = https://github.com/nexusdev/erc20
+[submodule "lib/ds-token"]
+	path = lib/ds-token
+	url = git@github.com:dapphub/ds-token
