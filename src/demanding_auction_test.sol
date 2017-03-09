@@ -19,7 +19,7 @@ contract TestableManager is DemandingAuctionManager {
     function getAuctionSellAmount(uint id) returns (uint) {
         return auctions(id).sell_amount;
     }
-    function getSupplier(uint id) returns (SupplyControllerInterface) {
+    function getSupplier(uint id) returns (DemandController) {
         return _suppliers[id];
     }
     function forceExpire() {
@@ -47,7 +47,7 @@ contract AuctionTester {
 }
 
 // mock ERC20 token that provides a demand method
-contract DemandableToken is DSTokenBase, SupplyControllerInterface {
+contract DemandableToken is DSTokenBase, DemandController {
     function DemandableToken(uint initial_balance) DSTokenBase(initial_balance) {
     }
     function demand(address who, uint amount) {
@@ -72,7 +72,7 @@ contract DemandingReverseAuctionTest is DSTest {
     DSTokenBase t1;
     DSTokenBase t2;
 
-    SupplyControllerInterface supplier;
+    DemandController supplier;
 
     // use prime numbers to avoid coincidental collisions
     uint constant T1 = 5 ** 12;
@@ -84,7 +84,7 @@ contract DemandingReverseAuctionTest is DSTest {
         t1 = new DemandableToken(million * T1);
         t2 = new DSTokenBase(million * T2);
 
-        supplier = SupplyControllerInterface(t1);
+        supplier = DemandController(t1);
 
         manager = new TestableManager();
         manager.setTime(block.timestamp);

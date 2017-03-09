@@ -2,17 +2,17 @@ pragma solidity ^0.4.4;
 
 import 'token-auction/manager.sol';
 
-contract SupplyControllerInterface {
+contract DemandController {
     function demand(address for_whom, uint amount);
 }
 
 contract DemandingAuctionManager is AuctionController
                                   , SplittingAuctionFrontend
 {
-    mapping(uint => SupplyControllerInterface) _suppliers;
+    mapping(uint => DemandController) _suppliers;
 
     function newDemandingReverseAuction( address beneficiary
-                                       , SupplyControllerInterface supplier
+                                       , DemandController supplier
                                        , address selling
                                        , address buying
                                        , uint max_inflation
