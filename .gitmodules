@@ -4,6 +4,3 @@
 [submodule "lib/token-auction"]
 	path = lib/token-auction
 	url = https://github.com/makerdao/token-auction
-[submodule "lib/ds-token"]
-	path = lib/ds-token
-	url = git@github.com:dapphub/ds-token
