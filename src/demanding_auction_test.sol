@@ -5,24 +5,24 @@ import 'ds-token/base.sol';
 import './demanding_auction.sol';
 
 contract TestableManager is DemandingAuctionManager {
-    uint public debug_timestamp;
+    uint64 public debug_timestamp;
 
-    function getTime() public constant returns (uint) {
+    function getTime() public view returns (uint64) {
         return debug_timestamp;
     }
-    function setTime(uint timestamp) {
+    function setTime(uint64 timestamp) public {
         debug_timestamp = timestamp;
     }
-    function getSellAmount(uint id) returns (uint) {
+    function getSellAmount(uint id) public view returns (uint) {
         return auctionlets(id).sell_amount;
     }
-    function getAuctionSellAmount(uint id) returns (uint) {
+    function getAuctionSellAmount(uint id) public view returns (uint) {
         return auctions(id).sell_amount;
     }
-    function getSupplier(uint id) returns (DemandController) {
+    function getSupplier(uint id) public view returns (DemandController) {
         return _suppliers[id];
     }
-    function forceExpire() {
+    function forceExpire() public {
         // force expiry
         setTime(getTime() + 1000 years);
     }
@@ -30,31 +30,32 @@ contract TestableManager is DemandingAuctionManager {
 
 contract AuctionTester {
     TestableManager manager;
-    function bindManager(TestableManager _manager) {
+    function bindManager(TestableManager _manager) public {
         manager = TestableManager(_manager);
     }
-    function doApprove(address spender, uint value, address token) {
+    function doApprove(address spender, uint value, address token) public {
         ERC20(token).approve(spender, value);
     }
     function doBid(uint auctionlet_id, uint bid_how_much, uint quantity)
+        public
         returns (uint, uint)
     {
-        return manager.bid(auctionlet_id, bid_how_much, quantity);
+        return manager.bid(auctionlet_id, bid_how_much, quantity, true);
     }
-    function doClaim(uint id) {
+    function doClaim(uint id) public {
         return manager.claim(id);
     }
 }
 
 // mock ERC20 token that provides a demand method
 contract DemandableToken is DSTokenBase, DemandController {
-    function DemandableToken(uint initial_balance) DSTokenBase(initial_balance) {
+    function DemandableToken(uint initial_balance) public DSTokenBase(initial_balance) {
     }
-    function demand(address who, uint amount) {
+    function demand(address who, uint amount) public {
         _supply += amount;
         _balances[who] += amount;
     }
-    function destroy(address who, uint amount) {
+    function destroy(address who, uint amount) public {
         _supply -= amount;
         _balances[who] -= amount;
     }
@@ -80,14 +81,14 @@ contract DemandingReverseAuctionTest is DSTest {
 
     uint constant million = 10 ** 6;
 
-    function setUp() {
+    function setUp() public {
         t1 = new DemandableToken(million * T1);
         t2 = new DSTokenBase(million * T2);
 
         supplier = DemandController(t1);
 
         manager = new TestableManager();
-        manager.setTime(block.timestamp);
+        manager.setTime(uint64(block.timestamp));
 
         seller = new AuctionTester();
         bidder1 = new AuctionTester();
@@ -109,12 +110,12 @@ contract DemandingReverseAuctionTest is DSTest {
         bidder1.doApprove(manager, 1000 * T2, t2);
         bidder2.doApprove(manager, 1000 * T2, t2);
     }
-    function testSetUp() {
+    function testSetUp() public {
         assertEq(t1.balanceOf(seller), 200 * T1);
         assertEq(t2.balanceOf(bidder1), 1000 * T2);
         assertEq(t2.balanceOf(bidder2), 1000 * T2);
     }
-    function newDemandingAuction() returns (uint id, uint base) {
+    function newDemandingAuction() public returns (uint id, uint base) {
         return manager.newDemandingReverseAuction({beneficiary:   beneficiary,
                                                    supplier:      supplier,
                                                    selling:       ERC20(t1),
@@ -125,27 +126,27 @@ contract DemandingReverseAuctionTest is DSTest {
                                                    ttl:           1 years
                                                   });
     }
-    function testNewDemandingAuction() {
+    function testNewDemandingAuction() public {
         // create a new demanding auction
         var (id, base) = newDemandingAuction();
         assertEq(id, 1);
         assertEq(base, 1);
         assert(manager.isReversed(id));
     }
-    function testVeryLargeSellAmount() {
+    function testVeryLargeSellAmount() public {
         // check that the sell amount is very large by default
         var (id, base) = newDemandingAuction();
-        var very_large = 2 ** 128 - 1;
+        uint very_large = 2 ** 128 - 1;
         assertEq(manager.getAuctionSellAmount(id), very_large);
         assertEq(manager.getSellAmount(base), very_large);
     }
-    function testNoTransferFromSeller() {
+    function testNoTransferFromSeller() public {
         // creating a new demanding auction should not
         // transfer any funds to / from the seller
         var balance_before1 = t1.balanceOf(seller);
         var balance_before2 = t2.balanceOf(seller);
 
-        var (id, base) = newDemandingAuction();
+        newDemandingAuction();
 
         var balance_after1 = t1.balanceOf(seller);
         var balance_after2 = t2.balanceOf(seller);
@@ -155,7 +156,7 @@ contract DemandingReverseAuctionTest is DSTest {
         assertEq(balance_before2 - balance_after2, 0);
         assertEq(balance_after2 - balance_before2, 0);
     }
-    function testSupplyControllerSetup() {
+    function testSupplyControllerSetup() public {
         // check that the supply manager works as we expect it to
         var balance_before = t1.balanceOf(this);
         supplier.demand(this, 10);
@@ -163,9 +164,9 @@ contract DemandingReverseAuctionTest is DSTest {
 
         assertEq(balance_after - balance_before, 10);
     }
-    function testSupplyController() {
+    function testSupplyController() public {
         // check that the supply manager works as we expect it to
-        var (id, base) = newDemandingAuction();
+        var (id,) = newDemandingAuction();
         var _supplier = manager.getSupplier(id);
 
         var balance_before = t1.balanceOf(this);
@@ -174,9 +175,9 @@ contract DemandingReverseAuctionTest is DSTest {
 
         assertEq(balance_after - balance_before, 10);
     }
-    function testBid() {
+    function testBid() public {
         // check that bid still works as expected
-        var (id, base) = newDemandingAuction();
+        var (,base) = newDemandingAuction();
 
         var balance_before = t2.balanceOf(bidder1);
         bidder1.doBid(base, 50 * T1, 100 * T2);
@@ -184,9 +185,9 @@ contract DemandingReverseAuctionTest is DSTest {
 
         assertEq(balance_before - balance_after, 100 * T2);
     }
-    function testClaimTransfersToBidder() {
+    function testClaimTransfersToBidder() public {
         // the claim function should still transfer to the bidder
-        var (id, base) = newDemandingAuction();
+        var (,base) = newDemandingAuction();
 
         bidder1.doBid(base, 50 * T1, 100 * T2);
 
@@ -198,10 +199,10 @@ contract DemandingReverseAuctionTest is DSTest {
 
         assertEq(balance_after - balance_before, 50 * T1);
     }
-    function testClaimInflatesSupply() {
+    function testClaimInflatesSupply() public {
         // bidder calling claim should inflate the supply of the
         // sell token by their winning bid
-        var (id, base) = newDemandingAuction();
+        var (,base) = newDemandingAuction();
 
         bidder1.doBid(base, 50 * T1, 100 * T2);
 
@@ -213,8 +214,8 @@ contract DemandingReverseAuctionTest is DSTest {
 
         assertEq(balance_after - balance_before, 50 * T1);
     }
-    function testFailClaimAgain() {
-        var (id, base) = newDemandingAuction();
+    function testFailClaimAgain() public {
+        var (,base) = newDemandingAuction();
 
         bidder1.doBid(base, 50 * T1, 100 * T2);
 

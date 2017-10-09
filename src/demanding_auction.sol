@@ -3,7 +3,7 @@ pragma solidity ^0.4.4;
 import 'token-auction/manager.sol';
 
 contract DemandController {
-    function demand(address for_whom, uint amount);
+    function demand(address for_whom, uint amount) public;
 }
 
 contract DemandingAuctionManager is AuctionController
@@ -18,15 +18,13 @@ contract DemandingAuctionManager is AuctionController
                                        , uint max_inflation
                                        , uint buy_amount
                                        , uint min_decrease
-                                       , uint ttl
+                                       , uint64 ttl
                                        )
+        public
         returns (uint auction_id, uint base_id)
     {
-        var (beneficiaries, payouts) = _makeSinglePayout(beneficiary, 0);
-
         (auction_id, base_id) = _makeGenericAuction({ creator: msg.sender
-                                                    , beneficiaries: beneficiaries
-                                                    , payouts: payouts
+                                                    , beneficiary: beneficiary
                                                     , selling: ERC20(selling)
                                                     , buying: ERC20(buying)
                                                     , sell_amount: max_inflation
@@ -43,9 +41,9 @@ contract DemandingAuctionManager is AuctionController
         return (auction_id, base_id);
     }
     // override sell token transfer as we no longer keep escrow
-    function takeFundsIntoEscrow(Auction A) internal {
+    function takeFundsIntoEscrow(Auction) internal pure {
     }
-    function settleExcessSell(Auction A, uint excess_sell) internal {
+    function settleExcessSell(Auction, uint) internal pure {
     }
     function settleBidderClaim(Auction A, Auctionlet a) internal {
         // demand the claimable amount from the supplier and then
@@ -61,6 +59,6 @@ contract DemandingAuctionManager is AuctionController
         // send the newly minted sell token on to the last bidder
         assert(A.selling.transfer(a.last_bidder, a.sell_amount));
     }
-    function settleReclaim(Auction A) internal {
+    function settleReclaim(Auction) internal pure {
     }
 }
