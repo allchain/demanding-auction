@@ -23,7 +23,7 @@ return for as little MKR as possible. The Dai is used to pay off
 debt incurred in liquidating an underwater CDP; the MKR is provided
 by inflating the total MKR supply.
 
-[token-auction]: https://github.com/rainbeam/token-auction
+[token-auction]: https://github.com/makerdao/token-auction
 [debt-auction]: https://makerdao.github.io/docs/#enforcing-the-target-price-liquidation
 
 ## Usage
